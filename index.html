@@ -317,34 +317,10 @@
 </footer>
 
 <script>
-const demoProducts = [
-  {
-    name: "PlayStation 5 Slim",
-    keywords: "ps5 playstation gaming console sony",
-    price: "499,99 €",
-    shop: "eBay",
-    score: "92/100"
-  },
-  {
-    name: "PlayStation 5 Digital",
-    keywords: "ps5 playstation gaming console digital sony",
-    price: "449,99 €",
-    shop: "eBay",
-    score: "89/100"
-  },
-  {
-    name: "Casque gaming PS5",
-    keywords: "ps5 casque gaming audio playstation",
-    price: "59,99 €",
-    shop: "Amazon",
-    score: "82/100"
-  }
-];
-
-function searchProducts() {
+async function searchProducts() {
   const input = document.getElementById("searchInput");
   const results = document.getElementById("searchResults");
-  const query = input.value.toLowerCase().trim();
+  const query = input.value.trim();
 
   if (!query) {
     results.innerHTML = "⚠️ Entre un produit à rechercher.";
@@ -358,70 +334,19 @@ function searchProducts() {
     </div>
   `;
 
-  setTimeout(() => {
-    const matches = demoProducts.filter(product =>
-      product.name.toLowerCase().includes(query) ||
-      product.keywords.includes(query)
+  try {
+    const response = await fetch(
+      "https://holy-violet-9de0.brandonlyam.workers.dev/search?q=" +
+      encodeURIComponent(query)
     );
 
-    if (matches.length === 0) {
-      results.innerHTML =
-        "Aucun produit trouvé pour <strong>" + query + "</strong>";
-      return;
-    }
+    const data = await response.json();
 
-    results.innerHTML = matches.map(product => `
-      <div style="
-        background:#111827;
-        border:1px solid #20283a;
-        border-radius:18px;
-        padding:18px;
-        margin:15px 0;
-        text-align:left;
-      ">
-        <div style="color:#49d17d;font-size:14px;">
-          📈 Produit sélectionné
-        </div>
-
-        <h3 style="margin:10px 0;">
-          ${product.name}
-        </h3>
-
-        <div style="
-          font-size:24px;
-          font-weight:bold;
-          margin:10px 0;
-        ">
-          ${product.price}
-        </div>
-
-        <div style="margin-bottom:8px;">
-          🛒 Boutique : ${product.shop}
-        </div>
-
-        <div style="margin-bottom:14px;">
-          🤖 Score : ${product.score}
-        </div>
-
-        <button
-          type="button"
-          style="
-            width:100%;
-            padding:13px;
-            border:0;
-            border-radius:10px;
-            background:#4169e1;
-            color:white;
-            font-weight:bold;
-            font-size:16px;
-          "
-        >
-          Voir l'offre
-        </button>
-      </div>
-    `).join("");
-
-  }, 2000);
+    results.innerHTML =
+      "✅ API connectée — recherche : <strong>" + data.query + "</strong>";
+  } catch (error) {
+    results.innerHTML = "❌ Erreur de connexion à la recherche.";
+  }
 }
 </script>
  </body>
