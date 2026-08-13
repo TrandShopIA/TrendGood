@@ -3,86 +3,208 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Connexion — TrendGood</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: #03060d;
+      background:
+        radial-gradient(circle at 50% 0%, #101b38 0%, #050914 40%, #03060d 100%);
       color: white;
-      padding: 30px 20px;
+      padding: 25px 20px;
     }
 
     .container {
-      max-width: 420px;
-      margin: 80px auto;
+      width: 100%;
+      max-width: 430px;
+      margin: 30px auto;
     }
 
-    a {
-      color: #5ea2ff;
+    .back {
+      display: inline-block;
+      color: #69a7ff;
       text-decoration: none;
+      margin-bottom: 35px;
     }
 
-    h1 {
-      margin-top: 30px;
+    .logo {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .logo span {
+      background: linear-gradient(90deg, #2cc7ff, #925cff);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      color: #9fa9bd;
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: rgba(12, 19, 34, .95);
+      border: 1px solid #23304a;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 0 35px rgba(74, 97, 255, .10);
+    }
+
+    label {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 7px;
+      font-size: 14px;
+      color: #c7cede;
     }
 
     input {
       width: 100%;
-      box-sizing: border-box;
       padding: 16px;
-      margin-top: 12px;
       border-radius: 12px;
-      border: 1px solid #23304a;
-      background: #0c1322;
+      border: 1px solid #293650;
+      background: #080e1a;
       color: white;
       font-size: 16px;
+      outline: none;
     }
 
-    button {
+    input:focus {
+      border-color: #657cff;
+    }
+
+    .primary {
       width: 100%;
-      margin-top: 18px;
+      margin-top: 22px;
       padding: 16px;
       border: 0;
       border-radius: 12px;
-      background: linear-gradient(90deg,#2768ff,#8954ff);
+      background: linear-gradient(90deg, #2768ff, #8954ff);
       color: white;
-      font-weight: bold;
       font-size: 16px;
+      font-weight: 700;
     }
 
-    .box {
-      margin-top: 25px;
-      padding: 22px;
-      border: 1px solid #23304a;
-      border-radius: 16px;
-      background: #0c1322;
+    .secondary {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid #31405e;
+      background: transparent;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 700;
     }
 
-    p {
-      color: #aeb7ca;
+    .forgot {
+      display: block;
+      margin-top: 18px;
+      color: #6fa8ff;
+      text-align: center;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #6f7a91;
+      margin: 25px 0;
+      font-size: 13px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: #26334d;
+    }
+
+    .info {
+      margin-top: 22px;
+      padding: 15px;
+      border-radius: 12px;
+      background: rgba(53, 101, 255, .08);
+      color: #9da8bd;
       line-height: 1.6;
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
+
   <div class="container">
-    <a href="index.html">← Retour à TrendGood</a>
 
-    <h1>Se connecter</h1>
+    <a class="back" href="index.html">← Retour à TrendGood</a>
 
-    <div class="box">
-      <input type="email" placeholder="Adresse e-mail">
-      <input type="password" placeholder="Mot de passe">
-
-      <button type="button">Se connecter</button>
-
-      <p style="margin-top:18px;">
-        La création de compte sera disponible prochainement.
-      </p>
+    <div class="logo">
+      Trend<span>Good</span>
     </div>
+
+    <p class="subtitle">
+      Connectez-vous pour retrouver vos favoris et profiter
+      des futures fonctionnalités TrendGood.
+    </p>
+
+    <div class="card">
+
+      <label for="email">Adresse e-mail</label>
+      <input
+        id="email"
+        type="email"
+        placeholder="exemple@email.com"
+      >
+
+      <label for="password">Mot de passe</label>
+      <input
+        id="password"
+        type="password"
+        placeholder="Votre mot de passe"
+      >
+
+      <button class="primary" type="button">
+        Se connecter
+      </button>
+
+      <a class="forgot" href="#">
+        Mot de passe oublié ?
+      </a>
+
+      <div class="divider">
+        Nouveau sur TrendGood ?
+      </div>
+
+      <a class="secondary" href="#">
+        Créer un compte
+      </a>
+
+      <div class="info">
+        🔒 Pour l'instant, cette page est l'interface de connexion.
+        Les vrais comptes seront activés quand on branchera
+        un système d'authentification sécurisé.
+      </div>
+
+    </div>
+
   </div>
+
 </body>
 </html>
