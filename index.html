@@ -223,7 +223,7 @@
 
   <div class="search">
     <input type="text" placeholder="Rechercher un produit...">
-    <button>Rechercher</button>
+    <button onclick="searchProducts()">Rechercher</button>
   </div>
 </section>
 
@@ -293,5 +293,18 @@
   © 2026 TrendGood — Comparateur et découverte de produits
 </footer>
 
-</body>
+  <script>
+function searchProducts() {
+  const input = document.getElementById("searchInput");
+  const query = input.value.toLowerCase().trim();
+
+  if (query === "") {
+    alert("Entre un produit à rechercher.");
+    return;
+  }
+
+  alert("Recherche TrendGood pour : " + query);
+}
+</script>
+ </body>
 </html>
