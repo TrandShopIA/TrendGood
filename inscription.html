@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créer un compte — TrendGood</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at 50% 0%, #101b38 0%, #050914 40%, #03060d 100%);
+      color: white;
+      padding: 25px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 430px;
+      margin: 30px auto;
+    }
+
+    .back {
+      color: #69a7ff;
+      text-decoration: none;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+      margin: 35px 0 10px;
+    }
+
+    .logo span {
+      background: linear-gradient(90deg, #2cc7ff, #925cff);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      color: #9fa9bd;
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #0c1322;
+      border: 1px solid #23304a;
+      border-radius: 20px;
+      padding: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 7px;
+      color: #c7cede;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #293650;
+      background: #080e1a;
+      color: white;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 16px;
+      border: 0;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #2768ff, #8954ff);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .login {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #6fa8ff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <a class="back" href="connexion.html">← Retour à la connexion</a>
+
+  <div class="logo">Trend<span>Good</span></div>
+
+  <p class="subtitle">
+    Créez votre compte TrendGood.
+  </p>
+
+  <div class="card">
+
+    <label>Nom ou pseudo</label>
+    <input type="text" placeholder="Votre nom">
+
+    <label>Adresse e-mail</label>
+    <input type="email" placeholder="exemple@email.com">
+
+    <label>Mot de passe</label>
+    <input type="password" placeholder="Minimum 8 caractères">
+
+    <label>Confirmer le mot de passe</label>
+    <input type="password" placeholder="Retapez votre mot de passe">
+
+    <button type="button">
+      Créer mon compte
+    </button>
+
+    <a class="login" href="connexion.html">
+      J'ai déjà un compte
+    </a>
+
+  </div>
+
+</div>
+
+</body>
+</html>
