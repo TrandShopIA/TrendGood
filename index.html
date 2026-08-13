@@ -222,9 +222,11 @@
   </p>
 
   <div class="search">
-    <input type="text" id="searchInput" placeholder="Rechercher un produit...">
-    <button onclick="searchProducts()">Rechercher</button>
-  </div>
+  <input type="text" id="searchInput" placeholder="Rechercher un produit...">
+  <button type="button" onclick="searchProducts()">Rechercher</button>
+</div>
+
+<div id="searchResults" style="text-align:center; margin-top:20px;"></div>
 </section>
 
 <section class="section">
@@ -296,14 +298,16 @@
   <script>
 function searchProducts() {
   const input = document.getElementById("searchInput");
-  const query = input.value.toLowerCase().trim();
+  const results = document.getElementById("searchResults");
+  const query = input.value.trim();
 
-  if (query === "") {
-    alert("Entre un produit à rechercher.");
+  if (!query) {
+    results.innerHTML = "⚠️ Entre un produit à rechercher.";
     return;
   }
 
-  alert("Recherche TrendGood pour : " + query);
+  results.innerHTML =
+    "🔎 Recherche TrendGood pour : <strong>" + query + "</strong>";
 }
 </script>
  </body>
