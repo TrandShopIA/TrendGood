@@ -159,6 +159,39 @@
       background: rgba(8, 14, 27, .75);
     }
 
+
+    .search-tools {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 680px;
+      margin: 22px auto 0;
+    }
+
+    .search-filter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #26334d;
+      border-radius: 13px;
+      background: rgba(8, 14, 27, .82);
+      color: #aeb8cc;
+      font-size: 13px;
+    }
+
+    .search-filter select {
+      min-width: 0;
+      flex: 1;
+      border: 0;
+      outline: none;
+      background: #111a2d;
+      color: #f4f6ff;
+      padding: 9px 10px;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
     #searchResults {
       max-width: 1200px;
       margin: 28px auto 0;
@@ -263,6 +296,40 @@
       color: #9ca8bd;
       font-size: 13px;
       line-height: 1.45;
+    }
+
+
+    .product-shipping {
+      color: #c7d0e3;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .load-more-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    .load-more-button {
+      min-width: 230px;
+      padding: 13px 20px;
+      border: 1px solid #4d5f91;
+      border-radius: 12px;
+      background: rgba(33, 47, 79, .88);
+      color: #f4f6ff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .load-more-button:hover {
+      border-color: #788cff;
+      background: rgba(46, 63, 108, .95);
+    }
+
+    .load-more-button:disabled {
+      cursor: wait;
+      opacity: .65;
     }
 
     .product-link {
@@ -567,6 +634,18 @@
         font-size: 16px;
       }
 
+      .search-tools {
+        grid-template-columns: 1fr;
+      }
+
+      .product-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .product-image-wrap {
+        height: 220px;
+      }
+
       .trend-grid,
       .market-grid,
       .features,
@@ -651,7 +730,27 @@
       <div class="badge">🛡️ 100% Gratuit</div>
     </div>
 
-    <div id="searchResults"></div>
+    <div class="search-tools" aria-label="Filtres de recherche">
+      <label class="search-filter">
+        État
+        <select id="conditionFilter">
+          <option value="all">Tous les états</option>
+          <option value="new">Neuf</option>
+          <option value="used">Occasion</option>
+        </select>
+      </label>
+
+      <label class="search-filter">
+        Trier par
+        <select id="sortFilter">
+          <option value="best">Pertinence eBay</option>
+          <option value="priceAsc">Prix croissant</option>
+          <option value="priceDesc">Prix décroissant</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="searchResults" aria-live="polite"></div>
 
   </section>
 
@@ -840,6 +939,14 @@
 
 
 <script>
+const searchState = {
+  query: "",
+  items: [],
+  total: 0,
+  hasMore: false,
+  loading: false
+};
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -859,7 +966,7 @@ function safeHttpUrl(value) {
 }
 
 function formatPrice(price) {
-  if (!price || !price.value) {
+  if (!price || price.value === undefined || price.value === null) {
     return "Prix non communiqué";
   }
 
@@ -880,12 +987,27 @@ function formatPrice(price) {
   }
 }
 
+function formatShipping(shipping) {
+  if (!shipping || shipping.value === undefined || shipping.value === null) {
+    return "Livraison : tarif à vérifier";
+  }
+
+  const value = Number(shipping.value);
+
+  if (Number.isFinite(value) && value === 0) {
+    return "Livraison gratuite";
+  }
+
+  return "Livraison : " + formatPrice(shipping);
+}
+
 function renderProduct(item) {
   const title = escapeHtml(item.title || "Produit eBay");
   const image = safeHttpUrl(item.image);
   const itemUrl = safeHttpUrl(item.url);
   const condition = escapeHtml(item.condition || "État non précisé");
   const seller = escapeHtml(item.seller?.username || "Vendeur eBay");
+  const shipping = escapeHtml(formatShipping(item.shipping));
 
   const imageMarkup = image
     ? '<img class="product-image" src="' + escapeHtml(image) + '" alt="' + title + '" loading="lazy">'
@@ -901,6 +1023,7 @@ function renderProduct(item) {
       '<div class="product-body">' +
         '<h3 class="product-title">' + title + '</h3>' +
         '<div class="product-price">' + formatPrice(item.price) + '</div>' +
+        '<div class="product-shipping">' + shipping + '</div>' +
         '<div class="product-meta">' + condition + '<br>Vendu par ' + seller + '</div>' +
         linkMarkup +
       '</div>' +
@@ -908,7 +1031,38 @@ function renderProduct(item) {
   );
 }
 
-async function searchProducts() {
+function renderSearchResults() {
+  const results = document.getElementById("searchResults");
+  const loadedCount = searchState.items.length;
+  const total = Number(searchState.total || loadedCount).toLocaleString("fr-FR");
+
+  if (!loadedCount) {
+    results.innerHTML =
+      '<div class="results-empty">Aucune offre eBay trouvée pour cette sélection.</div>';
+    return;
+  }
+
+  const loadMoreMarkup = searchState.hasMore
+    ? '<div class="load-more-wrap">' +
+        '<button id="loadMoreButton" class="load-more-button" type="button" onclick="loadMoreProducts()">' +
+          'Voir 20 offres supplémentaires' +
+        '</button>' +
+      '</div>'
+    : "";
+
+  results.innerHTML =
+    '<div class="api-ok">' +
+      '✅ Environ ' + total + ' résultats eBay pour <strong>' +
+      escapeHtml(searchState.query) +
+      '</strong> — ' + loadedCount + ' offres affichées.' +
+    '</div>' +
+    '<div class="product-grid">' +
+      searchState.items.map(renderProduct).join("") +
+    '</div>' +
+    loadMoreMarkup;
+}
+
+async function searchProducts(append = false) {
   const input = document.getElementById("searchInput");
   const results = document.getElementById("searchResults");
   const query = input.value.trim();
@@ -919,55 +1073,93 @@ async function searchProducts() {
     return;
   }
 
-  results.innerHTML =
-    '<div class="loading">' +
-      '<span class="spinner"></span>' +
-      'Recherche des meilleures offres eBay…' +
-    '</div>';
+  if (searchState.loading) {
+    return;
+  }
+
+  searchState.loading = true;
+
+  if (!append) {
+    searchState.query = query;
+    searchState.items = [];
+    searchState.total = 0;
+    searchState.hasMore = false;
+    results.innerHTML =
+      '<div class="loading">' +
+        '<span class="spinner"></span>' +
+        'Recherche des meilleures offres eBay…' +
+      '</div>';
+  } else {
+    const loadButton = document.getElementById("loadMoreButton");
+    if (loadButton) {
+      loadButton.disabled = true;
+      loadButton.textContent = "Chargement…";
+    }
+  }
 
   try {
-    const response = await fetch(
-      "https://holy-violet-9de0.brandonlyam.workers.dev/search?q=" +
-      encodeURIComponent(query)
+    const endpoint = new URL(
+      "https://holy-violet-9de0.brandonlyam.workers.dev/search"
     );
 
+    endpoint.searchParams.set("q", query);
+    endpoint.searchParams.set("offset", String(append ? searchState.items.length : 0));
+    endpoint.searchParams.set(
+      "condition",
+      document.getElementById("conditionFilter").value
+    );
+    endpoint.searchParams.set(
+      "sort",
+      document.getElementById("sortFilter").value
+    );
+
+    const response = await fetch(endpoint.toString());
     const data = await response.json();
 
     if (!response.ok || !data.ok) {
       throw new Error(data.message || "Erreur serveur");
     }
 
-    const items = Array.isArray(data.items) ? data.items : [];
+    const pageItems = Array.isArray(data.items) ? data.items : [];
 
-    if (!items.length) {
-      results.innerHTML =
-        '<div class="results-empty">' +
-          'Aucun résultat eBay trouvé pour <strong>' +
-          escapeHtml(data.query) +
-          '</strong>.' +
-        '</div>';
-      return;
+    if (append) {
+      const knownIds = new Set(searchState.items.map((item) => item.id));
+      searchState.items.push(
+        ...pageItems.filter((item) => !knownIds.has(item.id))
+      );
+    } else {
+      searchState.items = pageItems;
     }
 
-    const total = Number(data.total || items.length).toLocaleString("fr-FR");
+    searchState.query = data.query || query;
+    searchState.total = Number(data.total || searchState.items.length);
+    searchState.hasMore = Boolean(data.hasMore && pageItems.length);
 
-    results.innerHTML =
-      '<div class="api-ok">' +
-        '✅ ' + total + ' résultats eBay pour <strong>' +
-        escapeHtml(data.query) +
-        '</strong> — voici les ' + items.length + ' premières offres.' +
-      '</div>' +
-      '<div class="product-grid">' +
-        items.map(renderProduct).join("") +
-      '</div>';
+    renderSearchResults();
 
-    results.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!append) {
+      results.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   } catch (error) {
-    results.innerHTML =
-      '<div class="results-error">' +
-        '❌ Impossible de charger les offres pour le moment. Réessaie dans quelques instants.' +
-      '</div>';
+    if (append && searchState.items.length) {
+      renderSearchResults();
+      results.insertAdjacentHTML(
+        "beforeend",
+        '<div class="results-error">Impossible de charger plus d’offres pour le moment.</div>'
+      );
+    } else {
+      results.innerHTML =
+        '<div class="results-error">' +
+          '❌ Impossible de charger les offres pour le moment. Réessaie dans quelques instants.' +
+        '</div>';
+    }
+  } finally {
+    searchState.loading = false;
   }
+}
+
+function loadMoreProducts() {
+  searchProducts(true);
 }
 
 document
@@ -977,6 +1169,14 @@ document
       searchProducts();
     }
   });
+
+["conditionFilter", "sortFilter"].forEach(function(id) {
+  document.getElementById(id).addEventListener("change", function() {
+    if (document.getElementById("searchInput").value.trim()) {
+      searchProducts();
+    }
+  });
+});
 </script>
 
 </body>
