@@ -160,17 +160,123 @@
     }
 
     #searchResults {
-      max-width: 750px;
-      margin: 20px auto 0;
+      max-width: 1200px;
+      margin: 28px auto 0;
+      text-align: left;
+    }
+
+    .api-ok,
+    .results-empty,
+    .results-error {
+      padding: 15px;
+      border-radius: 14px;
+      text-align: center;
     }
 
     .api-ok {
-      padding: 15px;
-      border-radius: 14px;
       border: 1px solid rgba(67, 220, 125, .25);
       background: rgba(22, 109, 59, .08);
       color: #91f0ad;
+    }
+
+    .results-error {
+      border: 1px solid rgba(255, 94, 94, .3);
+      background: rgba(125, 30, 30, .12);
+      color: #ff9d9d;
+    }
+
+    .results-empty {
+      border: 1px solid #2c3852;
+      background: rgba(12, 20, 36, .8);
+      color: #cbd3e5;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .product-card {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #23304a;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(27, 38, 63, .95), rgba(9, 15, 28, .98));
+      box-shadow: 0 14px 40px rgba(0, 0, 0, .18);
+      transition: transform .2s ease, border-color .2s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      border-color: #5268a7;
+    }
+
+    .product-image-wrap {
+      display: grid;
+      height: 190px;
+      place-items: center;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .product-placeholder {
+      color: #59657d;
+      font-size: 42px;
+    }
+
+    .product-body {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 10px;
+      padding: 18px;
+    }
+
+    .product-title {
+      display: -webkit-box;
+      min-height: 48px;
+      overflow: hidden;
+      color: #f5f7ff;
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .product-price {
+      color: #7ef2a3;
+      font-size: 23px;
+      font-weight: 800;
+    }
+
+    .product-meta {
+      color: #9ca8bd;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .product-link {
+      margin-top: auto;
+      padding: 11px 14px;
+      border-radius: 11px;
+      background: linear-gradient(90deg, #2768ff, #8954ff);
+      color: #fff;
+      font-weight: 700;
       text-align: center;
+    }
+
+    .product-link:hover {
+      filter: brightness(1.08);
     }
 
     .loading {
@@ -734,51 +840,133 @@
 
 
 <script>
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function safeHttpUrl(value) {
+  try {
+    const parsed = new URL(String(value || ""));
+    return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function formatPrice(price) {
+  if (!price || !price.value) {
+    return "Prix non communiqué";
+  }
+
+  const value = Number(price.value);
+  const currency = price.currency || "EUR";
+
+  if (!Number.isFinite(value)) {
+    return escapeHtml(price.value + " " + currency);
+  }
+
+  try {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency
+    }).format(value);
+  } catch {
+    return escapeHtml(value.toFixed(2) + " " + currency);
+  }
+}
+
+function renderProduct(item) {
+  const title = escapeHtml(item.title || "Produit eBay");
+  const image = safeHttpUrl(item.image);
+  const itemUrl = safeHttpUrl(item.url);
+  const condition = escapeHtml(item.condition || "État non précisé");
+  const seller = escapeHtml(item.seller?.username || "Vendeur eBay");
+
+  const imageMarkup = image
+    ? '<img class="product-image" src="' + escapeHtml(image) + '" alt="' + title + '" loading="lazy">'
+    : '<div class="product-placeholder" aria-label="Image indisponible">▣</div>';
+
+  const linkMarkup = itemUrl
+    ? '<a class="product-link" href="' + escapeHtml(itemUrl) + '" target="_blank" rel="noopener noreferrer sponsored">Voir sur eBay ↗</a>'
+    : "";
+
+  return (
+    '<article class="product-card">' +
+      '<div class="product-image-wrap">' + imageMarkup + '</div>' +
+      '<div class="product-body">' +
+        '<h3 class="product-title">' + title + '</h3>' +
+        '<div class="product-price">' + formatPrice(item.price) + '</div>' +
+        '<div class="product-meta">' + condition + '<br>Vendu par ' + seller + '</div>' +
+        linkMarkup +
+      '</div>' +
+    '</article>'
+  );
+}
+
 async function searchProducts() {
   const input = document.getElementById("searchInput");
   const results = document.getElementById("searchResults");
   const query = input.value.trim();
 
   if (!query) {
-    results.innerHTML = "⚠️ Entre un produit à rechercher.";
+    results.innerHTML = '<div class="results-empty">⚠️ Entre un produit à rechercher.</div>';
+    input.focus();
     return;
   }
 
-  results.innerHTML = `
-    <div class="loading">
-      <span class="spinner"></span>
-      Recherche en cours…
-    </div>
-  `;
+  results.innerHTML =
+    '<div class="loading">' +
+      '<span class="spinner"></span>' +
+      'Recherche des meilleures offres eBay…' +
+    '</div>';
 
   try {
-
     const response = await fetch(
       "https://holy-violet-9de0.brandonlyam.workers.dev/search?q=" +
       encodeURIComponent(query)
     );
 
-    if (!response.ok) {
-      throw new Error("Erreur serveur");
-    }
-
     const data = await response.json();
 
-    results.innerHTML = `
-      <div class="api-ok">
-        ✅ API connectée — recherche :
-        <strong>${data.query}</strong>
-      </div>
-    `;
+    if (!response.ok || !data.ok) {
+      throw new Error(data.message || "Erreur serveur");
+    }
 
+    const items = Array.isArray(data.items) ? data.items : [];
+
+    if (!items.length) {
+      results.innerHTML =
+        '<div class="results-empty">' +
+          'Aucun résultat eBay trouvé pour <strong>' +
+          escapeHtml(data.query) +
+          '</strong>.' +
+        '</div>';
+      return;
+    }
+
+    const total = Number(data.total || items.length).toLocaleString("fr-FR");
+
+    results.innerHTML =
+      '<div class="api-ok">' +
+        '✅ ' + total + ' résultats eBay pour <strong>' +
+        escapeHtml(data.query) +
+        '</strong> — voici les ' + items.length + ' premières offres.' +
+      '</div>' +
+      '<div class="product-grid">' +
+        items.map(renderProduct).join("") +
+      '</div>';
+
+    results.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
-
-    results.innerHTML = `
-      <div style="color:#ff7777;padding:15px;">
-        ❌ Impossible de contacter la recherche.
-      </div>
-    `;
-
+    results.innerHTML =
+      '<div class="results-error">' +
+        '❌ Impossible de charger les offres pour le moment. Réessaie dans quelques instants.' +
+      '</div>';
   }
 }
 
